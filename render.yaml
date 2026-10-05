@@ -2,14 +2,14 @@ databases:
   - name: fittrack-db
     databaseName: gymsaas
     user: gymsaas
-    plan: basic-256mb
+    plan: free
     region: oregon
 
 services:
   - type: web
     name: fittrack-api
     runtime: docker
-    plan: starter
+    plan: free
     region: oregon
     dockerContext: ./backend
     dockerfilePath: ./backend/Dockerfile
