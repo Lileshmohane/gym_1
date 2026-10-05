@@ -1,0 +1,20 @@
+{
+  "cli": { "version": ">= 12.0.0" },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": { "EXPO_PUBLIC_API_URL": "http://192.168.1.35:8080" }
+    },
+    "staging": {
+      "distribution": "internal",
+      "env": { "EXPO_PUBLIC_API_URL": "https://api-staging.yourapp.com" }
+    },
+    "production": {
+      "env": { "EXPO_PUBLIC_API_URL": "https://api.yourapp.com" }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

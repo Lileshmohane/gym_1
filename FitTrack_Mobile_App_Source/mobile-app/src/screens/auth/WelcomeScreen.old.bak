@@ -1,0 +1,216 @@
+import React, { useEffect, useRef } from "react";
+import { View, Text, StyleSheet, ScrollView, Animated, Dimensions } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { Button } from "../../components/Button";
+import { Card } from "../../components/Card";
+import { colors, radius, spacing, typography } from "../../theme/tokens";
+
+const { width } = Dimensions.get("window");
+
+const FEATURES = [
+  { icon: "people-outline" as const, title: "Member Management", body: "Every member, plan, and subscription in one place." },
+  { icon: "notifications-outline" as const, title: "Automated Reminders", body: "A push reminder goes out automatically before a plan expires." },
+  { icon: "qr-code-outline" as const, title: "Punch In, Punch Out", body: "QR self-check-in or staff manual entry — visit history builds itself." },
+];
+
+const STATS = [
+  { num: "3", label: "days advance notice before a membership lapses" },
+  { num: "1", label: "screen for check-ins, payments, and renewals" },
+  { num: "100%", label: "tenant-isolated data, even on the shared plan" },
+];
+
+export default function WelcomeScreen() {
+  const navigation = useNavigation<any>();
+
+  const anims = useRef({
+    logo: new Animated.Value(0),
+    headline: new Animated.Value(0),
+    lead: new Animated.Value(0),
+    ctas: new Animated.Value(0),
+  }).current;
+
+  useEffect(() => {
+    const make = (v: Animated.Value, delay: number) =>
+      Animated.timing(v, { toValue: 1, duration: 500, delay, useNativeDriver: true });
+    Animated.parallel([
+      make(anims.logo, 0),
+      make(anims.headline, 80),
+      make(anims.lead, 160),
+      make(anims.ctas, 240),
+    ]).start();
+  }, [anims]);
+
+  const fadeUp = (v: Animated.Value) => ({
+    opacity: v,
+    transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+  });
+
+  return (
+    <ScrollView style={styles.wrap} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+      <LinearGradient colors={[colors.bg, "#1A1D2A", colors.bg]} style={styles.hero}>
+        <LinearGradient
+          colors={[colors.primary, colors.accent]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.blob}
+        />
+
+        <Animated.View style={fadeUp(anims.logo)}>
+          <View style={styles.brandRow}>
+            <View style={styles.brandIconBox}>
+              <Ionicons name="barbell" size={20} color="#FFFFFF" />
+            </View>
+            <Text style={styles.logo}>FITTRACK PRO</Text>
+          </View>
+        </Animated.View>
+
+        <Animated.Text style={[styles.headline, fadeUp(anims.headline)]}>
+          Gym management{"\n"}built for athletes.
+        </Animated.Text>
+
+        <Animated.Text style={[styles.lead, fadeUp(anims.lead)]}>
+          FitTrack keeps every member's status current, nudges them before they lapse, and provides instant check-ins with automated attendance.
+        </Animated.Text>
+
+        <Animated.View style={[styles.ctaRow, fadeUp(anims.ctas)]}>
+          <Button
+            label="Get Started"
+            icon="arrow-forward"
+            variant="primary"
+            onPress={() => navigation.navigate("Login")}
+          />
+          <Button
+            label="I already have an account"
+            variant="ghost"
+            onPress={() => navigation.navigate("Login")}
+          />
+          <Button
+            label="Register your gym as admin"
+            variant="secondary"
+            onPress={() => navigation.navigate("RegisterGym")}
+          />
+        </Animated.View>
+      </LinearGradient>
+
+      <View style={styles.stats}>
+        {STATS.map((s) => (
+          <View key={s.label} style={styles.statItem}>
+            <Text style={styles.statNum}>{s.num}</Text>
+            <Text style={styles.statLabel}>{s.label}</Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.features}>
+        <Text style={styles.sectionTitle}>Everything the front desk was doing on paper.</Text>
+        {FEATURES.map((f) => (
+          <Card key={f.title} style={styles.featureCard}>
+            <View style={styles.featureIconBox}>
+              <Ionicons name={f.icon} size={22} color={colors.primary} />
+            </View>
+            <View style={styles.featureTextWrap}>
+              <Text style={styles.featureTitle}>{f.title}</Text>
+              <Text style={styles.featureBody}>{f.body}</Text>
+            </View>
+          </Card>
+        ))}
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrap: { flex: 1, backgroundColor: colors.bg },
+  hero: {
+    paddingTop: 70,
+    paddingBottom: 40,
+    paddingHorizontal: spacing.lg,
+    overflow: "hidden",
+    position: "relative",
+  },
+  blob: {
+    position: "absolute",
+    width: width * 1.4,
+    height: width * 1.4,
+    borderRadius: width,
+    top: -width * 0.7,
+    right: -width * 0.5,
+    opacity: 0.15,
+  },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 24,
+  },
+  brandIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logo: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+  headline: {
+    color: "#fff",
+    ...typography.display,
+    fontSize: 34,
+    lineHeight: 40,
+  },
+  lead: {
+    color: colors.textDim,
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: 16,
+    maxWidth: 340,
+  },
+  ctaRow: { marginTop: 28, gap: 12 },
+  stats: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    backgroundColor: colors.card,
+    padding: spacing.lg,
+    gap: 20,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+  },
+  statItem: { flexBasis: "45%", flexGrow: 1 },
+  statNum: { fontSize: 28, fontWeight: "800", color: colors.accent },
+  statLabel: { fontSize: 12, color: colors.textDim, marginTop: 4, lineHeight: 16 },
+  features: { padding: spacing.lg, paddingBottom: spacing.xl },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: colors.text,
+    marginBottom: 18,
+    lineHeight: 26,
+  },
+  featureCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: spacing.md,
+    gap: 14,
+  },
+  featureIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.sm,
+    backgroundColor: "rgba(124, 92, 255, 0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  featureTextWrap: {
+    flex: 1,
+  },
+  featureTitle: { fontSize: 16, fontWeight: "700", color: colors.text },
+  featureBody: { fontSize: 13, color: colors.textDim, marginTop: 4, lineHeight: 18 },
+});

@@ -1,0 +1,28 @@
+# Local development stack (Deployment Document, Section 2.2).
+# Usage: set JWT_SECRET in your environment, then run docker compose up --build.
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: gymsaas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_ROOT_PASSWORD:-NewPassword123}
+    ports: ["5432:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 20
+  backend:
+    build: .
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gymsaas
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_ROOT_PASSWORD:-NewPassword123}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET (32+ chars)}
+      NOTIFICATIONS_ENABLED: "false"   # flip to true to send real pushes
+    ports: ["8080:8080"]
+volumes:
+  postgres_data:

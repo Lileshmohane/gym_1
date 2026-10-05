@@ -1,0 +1,22 @@
+# Build outputs
+backend/target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Env / secrets
+.env
+*.env
+firebase-service-account.json
+
+# Node / Expo / RN
+node_modules/
+FitTrack_Mobile_App_Source/mobile-app/node_modules/
+.expo/
+dist/
+web-build/
+*.log
+.DS_Store

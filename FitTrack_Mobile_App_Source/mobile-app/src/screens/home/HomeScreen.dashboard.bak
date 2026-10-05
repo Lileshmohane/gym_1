@@ -1,0 +1,355 @@
+import React, { useState } from "react";
+import {
+  Text,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+  View,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { Card, WorkoutPhotoCard } from "../../components/Card";
+import { Button } from "../../components/Button";
+import { EmptyState } from "../../components/EmptyState";
+import { GoalRing } from "../../components/GoalRing";
+import { NotificationBell, NotificationModal } from "../../components/NotificationModal";
+import { useGymPlans } from "../../api/hooks";
+import { useAuthStore } from "../../store/authStore";
+import { colors, radius, spacing, typography } from "../../theme/tokens";
+import { gymImages } from "../../theme/images";
+
+export default function HomeScreen() {
+  const navigation = useNavigation<any>();
+  const user = useAuthStore((s) => s.user);
+  const { data: plans, isLoading, isError, refetch } = useGymPlans();
+  const [notifVisible, setNotifVisible] = useState(false);
+
+  return (
+    <View style={styles.screen}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Top Header per Section 9: Greeting + Notification Bell */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>
+              Hi, {user?.name?.split(" ")[0] ?? "Athlete"}
+            </Text>
+            <Text style={styles.subtitle}>Ready for today's session?</Text>
+          </View>
+          <NotificationBell unreadCount={2} onPress={() => setNotifVisible(true)} />
+        </View>
+
+        {/* Streak Card with Violet-to-Coral Gradient per Section 2 & 9 */}
+        <LinearGradient
+          colors={["#7C5CFF", "#FF6B4A"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.streakCard}
+        >
+          <View style={styles.streakLeft}>
+            <View style={styles.flameCircle}>
+              <Ionicons name="flame" size={26} color="#FF6B4A" />
+            </View>
+            <View>
+              <Text style={styles.streakTitle}>7-Day Streak</Text>
+              <Text style={styles.streakSub}>Train today to keep the fire burning!</Text>
+            </View>
+          </View>
+          <View style={styles.streakDaysBadge}>
+            <Text style={styles.streakDaysText}>7 DAYS</Text>
+          </View>
+        </LinearGradient>
+
+        {/* Goal Ring & Weekly Target per Section 7 & 9 */}
+        <Card style={styles.goalCard}>
+          <View style={styles.goalRow}>
+            <GoalRing
+              progress={0.8}
+              size={110}
+              strokeWidth={10}
+              label="4/5"
+              sublabel="Workouts"
+            />
+            <View style={styles.goalStats}>
+              <Text style={styles.goalHeading}>Weekly Target</Text>
+              <Text style={styles.goalDesc}>
+                1 more workout to hit your weekly fitness commitment.
+              </Text>
+              <View style={styles.miniStatsRow}>
+                <View style={styles.miniStat}>
+                  <Text style={styles.miniStatValue}>1,840</Text>
+                  <Text style={styles.miniStatLabel}>KCAL</Text>
+                </View>
+                <View style={styles.miniStatDivider} />
+                <View style={styles.miniStat}>
+                  <Text style={styles.miniStatValue}>3</Text>
+                  <Text style={styles.miniStatLabel}>CHECK-INS</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </Card>
+
+        {/* Today's Workout Card with Real Gym Photo per Section 4 & 9 */}
+        <Text style={styles.sectionTitle}>TODAY'S WORKOUT</Text>
+        <WorkoutPhotoCard
+          title="Upper Body Hypertrophy"
+          meta="45 min · 6 exercises · Intermediate"
+          uri={gymImages.workoutStrength}
+          badge="FEATURED"
+          height={190}
+          onPress={() => navigation.navigate("Check In")}
+        />
+
+        {/* Quick Check-In CTA Button */}
+        <Button
+          label="Check In at Gym"
+          icon="qr-code-outline"
+          variant="primary"
+          onPress={() => navigation.navigate("Check In")}
+          style={{ marginBottom: spacing.lg }}
+        />
+
+        {/* Gym Membership Plans */}
+        <View style={styles.plansHeader}>
+          <Text style={styles.sectionTitle}>MEMBERSHIP PLANS</Text>
+          <Text
+            style={styles.viewAllLink}
+            onPress={() => navigation.navigate("Plans")}
+          >
+            View all
+          </Text>
+        </View>
+
+        {isLoading && <ActivityIndicator color={colors.primary} style={{ marginVertical: 20 }} />}
+
+        {isError && (
+          <Card style={{ alignItems: "center" }}>
+            <EmptyState
+              icon="alert-circle-outline"
+              iconColor={colors.warning}
+              message="Couldn't load your gym's plans."
+            />
+            <Button label="Retry" variant="ghost" onPress={() => refetch()} style={{ marginTop: spacing.sm }} />
+          </Card>
+        )}
+
+        {!isLoading && !isError && plans?.length === 0 && (
+          <EmptyState
+            icon="barbell-outline"
+            iconColor={colors.primary}
+            message="Your gym hasn't published any membership plans yet."
+          />
+        )}
+
+        {plans?.slice(0, 3).map((plan) => (
+          <Card key={plan.id} style={styles.planCard}>
+            <View style={styles.planTop}>
+              <View style={styles.planIconBox}>
+                <Ionicons name="card" size={20} color={colors.primary} />
+              </View>
+              <View style={styles.planInfo}>
+                <Text style={styles.planName}>{plan.name}</Text>
+                <Text style={styles.planDuration}>{plan.durationDays} Days Access</Text>
+              </View>
+              <Text style={styles.planPrice}>
+                ₹{plan.price.toLocaleString("en-IN")}
+              </Text>
+            </View>
+          </Card>
+        ))}
+      </ScrollView>
+
+      {/* In-app Notification Modal */}
+      <NotificationModal
+        visible={notifVisible}
+        onClose={() => setNotifVisible(false)}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: 54,
+    paddingBottom: spacing.xl * 2,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.lg,
+  },
+  greeting: {
+    ...typography.display,
+    fontSize: 28,
+    color: colors.text,
+  },
+  subtitle: {
+    ...typography.body,
+    fontSize: 14,
+    color: colors.textDim,
+    marginTop: 2,
+  },
+  streakCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: spacing.md,
+    borderRadius: radius.card,
+    marginBottom: spacing.md,
+    shadowColor: "#FF6B4A",
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  streakLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
+  },
+  flameCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  streakTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  streakSub: {
+    fontSize: 12,
+    color: "rgba(255, 255, 255, 0.9)",
+    marginTop: 2,
+  },
+  streakDaysBadge: {
+    backgroundColor: "rgba(0,0,0,0.25)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+  },
+  streakDaysText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 11,
+    letterSpacing: 0.5,
+  },
+  goalCard: {
+    marginBottom: spacing.lg,
+    padding: spacing.md,
+  },
+  goalRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  goalStats: {
+    flex: 1,
+  },
+  goalHeading: {
+    ...typography.h2,
+    fontSize: 17,
+    color: colors.text,
+  },
+  goalDesc: {
+    ...typography.caption,
+    color: colors.textDim,
+    fontSize: 12,
+    marginTop: 4,
+    lineHeight: 16,
+  },
+  miniStatsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    marginTop: 12,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  miniStat: {},
+  miniStatValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.primary,
+  },
+  miniStatLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: colors.textDim,
+  },
+  miniStatDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: colors.border,
+  },
+  sectionTitle: {
+    ...typography.label,
+    fontSize: 12,
+    color: colors.textDim,
+    letterSpacing: 1,
+    marginBottom: spacing.xs,
+  },
+  plansHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.xs,
+  },
+  viewAllLink: {
+    ...typography.caption,
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.primary,
+  },
+  planCard: {
+    marginBottom: spacing.sm,
+    padding: spacing.md,
+  },
+  planTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  planIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: radius.sm,
+    backgroundColor: "rgba(124, 92, 255, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  planInfo: {
+    flex: 1,
+  },
+  planName: {
+    ...typography.h2,
+    fontSize: 16,
+    color: colors.text,
+  },
+  planDuration: {
+    ...typography.caption,
+    color: colors.textDim,
+    marginTop: 2,
+  },
+  planPrice: {
+    ...typography.h2,
+    fontSize: 17,
+    color: colors.accent,
+  },
+});

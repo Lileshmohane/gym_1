@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "FitTrack",
+    "slug": "fittrack-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "splash": { "backgroundColor": "#1F3A5F" },
+    "assetBundlePatterns": ["**/*"],
+    "ios": { "supportsTablet": false, "bundleIdentifier": "com.fittrack.mobile" },
+    "android": {
+      "adaptiveIcon": { "backgroundColor": "#1F3A5F" },
+      "package": "com.fittrack.mobile",
+      "permissions": ["NOTIFICATIONS"]
+    },
+    "plugins": ["expo-secure-store", "expo-notifications"],
+    "extra": {
+      "eas": { "projectId": "REPLACE_WITH_EAS_PROJECT_ID" }
+    }
+  }
+}
